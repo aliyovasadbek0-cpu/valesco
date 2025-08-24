@@ -7,13 +7,17 @@ import { CategoriesModule } from './categories/categories.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
+      host: 'caboose.proxy.rlwy.net',
+      port: 38357,
       username: 'postgres',
-      password: '1234',
-      database: 'valesco',
+      password: 'HyVvMQNgyRdwgFzDnhjcwaDwluHuGxLX',
+      database: 'railway',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+        autoLoadEntities: true,
+        ssl: {
+          rejectUnauthorized: false,
+        },
     }),
     ProductsModule,
     CategoriesModule,

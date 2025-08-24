@@ -12,9 +12,19 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // Enable validation globally + transform
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
-  await app.listen(3000);
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
+
+  await app.listen(8000, '0.0.0.0');
 }
 bootstrap();
