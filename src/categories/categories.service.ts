@@ -29,7 +29,7 @@ export class CategoriesService {
 async findOne(id: number): Promise<Category> {
   const category = await this.categoriesRepository.findOne({
     where: { id },
-    relations: ['products'], // shu yerda bog‘langan mahsulotlarni ham qo‘shamiz
+    relations: ['products'],
   });
 
   if (!category) {

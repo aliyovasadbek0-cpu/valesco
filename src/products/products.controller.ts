@@ -32,7 +32,7 @@ export class ProductsController {
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
     const images = {
-      image: files.image ? files.image.map(file => `/uploads/products/${file.filename}`) : undefined,
+      image: files.image ? files.image.map(file => `https://valesco-production.up.railway.app/uploads/products/${file.filename}`) : undefined,
     };
     return this.productsService.create(createProductDto, images);
   }

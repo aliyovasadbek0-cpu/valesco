@@ -52,7 +52,6 @@ export class ProductsService {
       packing: createProductDto.packing || [],
       category,
     });
-    console.log('Product to save:', product); // Debugging uchun
     return this.productsRepository.save(product);
   }
 

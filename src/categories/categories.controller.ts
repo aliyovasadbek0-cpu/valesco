@@ -26,7 +26,7 @@ export class CategoriesController {
     @Body() createCategoryDto: CreateCategoryDto,
     @UploadedFile() img: Express.Multer.File,
   ) {
-    const imgPath = img ? `/uploads/categories/${img.filename}` : undefined;
+    const imgPath = img ? `https://valesco-production.up.railway.app/uploads/categories/${img.filename}` : undefined;
     return this.categoriesService.create(createCategoryDto, imgPath);
   }
 
