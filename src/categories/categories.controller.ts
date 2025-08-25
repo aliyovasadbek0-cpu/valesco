@@ -20,6 +20,7 @@ export class CategoriesController {
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
+      
     }),
   )
   async create(
