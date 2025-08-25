@@ -12,10 +12,7 @@ export class PackingDto {
 
 export class CreateProductDto {
   @IsString()
-  title_ru: string;
-
-  @IsString()
-  title_en: string;
+  title: string;
 
   @IsOptional()
   @IsString()
@@ -26,66 +23,61 @@ export class CreateProductDto {
   description_en?: string;
 
   @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  specifications?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  image?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  sae?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  density?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  kinematic_one?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  kinematic_two?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  viscosity?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  flash?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  temperature?: string[];
+
+  @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  base?: string[];
+
+  @IsOptional()
   @Transform(({ value }) => toPackingArray(value))
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PackingDto)
   packing?: PackingDto[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  advantages_ru?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  advantages_en?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  specifications_ru?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  specifications_en?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  characteristics_ru?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  characteristics_en?: string[];
-
-  @IsOptional()
-  @Transform(({ value }) => toStringArray(value))
-  @IsArray()
-  documentation?: string[];
-
-  @IsOptional()
-  @IsString()
-  image?: string;
-
-  @IsOptional()
-  @IsString()
-  image_middle?: string;
-
-  @IsOptional()
-  @IsString()
-  image_bottom?: string;
-
-  @IsOptional()
-  @IsString()
-  line?: string;
-
-  @IsOptional()
-  @IsString()
-  viscosity?: string;
 
   @Type(() => Number)
   @IsNumber()

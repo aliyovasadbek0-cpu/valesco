@@ -16,7 +16,7 @@ export class ProductsService {
     private categoriesService: CategoriesService,
   ) {}
 
-  async create(createProductDto: CreateProductDto, images?: { image?: string; image_middle?: string; image_bottom?: string }): Promise<Product> {
+  async create(createProductDto: CreateProductDto, images?: { image?: string[] }): Promise<Product> {
     // Validate unique articles in packing
     if (createProductDto.packing && createProductDto.packing.length > 0) {
       for (const item of createProductDto.packing) {
@@ -36,33 +36,20 @@ export class ProductsService {
 
     const category = await this.categoriesService.findOne(createProductDto.categoryId);
     const product = this.productsRepository.create({
-      title: {
-        ru: createProductDto.title_ru,
-        en: createProductDto.title_en,
-      },
-      description: {
-        ru: createProductDto.description_ru,
-        en: createProductDto.description_en,
-      },
+      title: createProductDto.title,
+      description_ru: createProductDto.description_ru,
+      description_en: createProductDto.description_en,
+      specifications: createProductDto.specifications || [],
+      image: images?.image || [],
+      sae: createProductDto.sae || [],
+      density: createProductDto.density || [],
+      kinematic_one: createProductDto.kinematic_one || [],
+      kinematic_two: createProductDto.kinematic_two || [],
+      viscosity: createProductDto.viscosity || [],
+      flash: createProductDto.flash || [],
+      temperature: createProductDto.temperature || [],
+      base: createProductDto.base || [],
       packing: createProductDto.packing || [],
-      advantages: {
-        ru: createProductDto.advantages_ru || [],
-        en: createProductDto.advantages_en || [],
-      },
-      specifications: {
-        ru: createProductDto.specifications_ru || [],
-        en: createProductDto.specifications_en || [],
-      },
-      characteristics: {
-        ru: createProductDto.characteristics_ru || [],
-        en: createProductDto.characteristics_en || [],
-      },
-      documentation: createProductDto.documentation || [],
-      image: images?.image,
-      image_middle: images?.image_middle,
-      image_bottom: images?.image_bottom,
-      line: createProductDto.line,
-      viscosity: createProductDto.viscosity,
       category,
     });
     console.log('Product to save:', product); // Debugging uchun
@@ -70,29 +57,20 @@ export class ProductsService {
   }
 
   async findAll(filters: FilterProductsDto): Promise<Product[]> {
-  const query = this.productsRepository
-    .createQueryBuilder('product')
-    .leftJoinAndSelect('product.category', 'category');
+    const query = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category');
 
-  if (filters.categoryId) {
-    query.andWhere('category.id = :categoryId', { categoryId: filters.categoryId });
+    if (filters.categoryId) {
+      query.andWhere('category.id = :categoryId', { categoryId: filters.categoryId });
+    }
+
+    if (filters.approval) {
+      query.andWhere('product.specifications::text ILIKE :approval', { approval: `%${filters.approval}%` });
+    }
+
+    return query.getMany();
   }
-
-  if (filters.line) {
-    query.andWhere('product.line = :line', { line: filters.line });
-  }
-
-  if (filters.viscosity) {
-    query.andWhere('product.viscosity = :viscosity', { viscosity: filters.viscosity });
-  }
-
-  if (filters.approval) {
-    query.andWhere('product.specifications::text ILIKE :approval', { approval: `%${filters.approval}%` });
-  }
-
-  return query.getMany();
-}
-
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
@@ -105,22 +83,22 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto, images?: { image?: string; image_middle?: string; image_bottom?: string }): Promise<Product> {
+  async update(id: number, updateProductDto: UpdateProductDto, images?: { image?: string[] }): Promise<Product> {
     const product = await this.findOne(id);
 
-    if (updateProductDto.title_ru || updateProductDto.title_en) {
-      product.title = {
-        ru: updateProductDto.title_ru || product.title.ru,
-        en: updateProductDto.title_en || product.title.en,
-      };
-    }
-
-    if (updateProductDto.description_ru || updateProductDto.description_en) {
-      product.description = {
-        ru: updateProductDto.description_ru || product.description?.ru,
-        en: updateProductDto.description_en || product.description?.en,
-      };
-    }
+    if (updateProductDto.title) product.title = updateProductDto.title;
+    if (updateProductDto.description_ru) product.description_ru = updateProductDto.description_ru;
+    if (updateProductDto.description_en) product.description_en = updateProductDto.description_en;
+    if (updateProductDto.specifications) product.specifications = updateProductDto.specifications;
+    if (images?.image) product.image = images.image;
+    if (updateProductDto.sae) product.sae = updateProductDto.sae;
+    if (updateProductDto.density) product.density = updateProductDto.density;
+    if (updateProductDto.kinematic_one) product.kinematic_one = updateProductDto.kinematic_one;
+    if (updateProductDto.kinematic_two) product.kinematic_two = updateProductDto.kinematic_two;
+    if (updateProductDto.viscosity) product.viscosity = updateProductDto.viscosity;
+    if (updateProductDto.flash) product.flash = updateProductDto.flash;
+    if (updateProductDto.temperature) product.temperature = updateProductDto.temperature;
+    if (updateProductDto.base) product.base = updateProductDto.base;
 
     if (updateProductDto.packing) {
       for (const item of updateProductDto.packing) {
@@ -139,36 +117,6 @@ export class ProductsService {
       product.packing = updateProductDto.packing || [];
     }
 
-    if (updateProductDto.advantages_ru || updateProductDto.advantages_en) {
-      product.advantages = {
-        ru: updateProductDto.advantages_ru || product.advantages?.ru || [],
-        en: updateProductDto.advantages_en || product.advantages?.en || [],
-      };
-    }
-
-    if (updateProductDto.specifications_ru || updateProductDto.specifications_en) {
-      product.specifications = {
-        ru: updateProductDto.specifications_ru || product.specifications?.ru || [],
-        en: updateProductDto.specifications_en || product.specifications?.en || [],
-      };
-    }
-
-    if (updateProductDto.characteristics_ru || updateProductDto.characteristics_en) {
-      product.characteristics = {
-        ru: updateProductDto.characteristics_ru || product.characteristics?.ru || [],
-        en: updateProductDto.characteristics_en || product.characteristics?.en || [],
-      };
-    }
-
-    if (updateProductDto.documentation) {
-      product.documentation = updateProductDto.documentation;
-    }
-
-    if (images?.image) product.image = images.image;
-    if (images?.image_middle) product.image_middle = images.image_middle;
-    if (images?.image_bottom) product.image_bottom = images.image_bottom;
-    if (updateProductDto.line) product.line = updateProductDto.line;
-    if (updateProductDto.viscosity) product.viscosity = updateProductDto.viscosity;
     if (updateProductDto.categoryId) {
       const category = await this.categoriesService.findOne(updateProductDto.categoryId);
       product.category = category;
@@ -189,9 +137,7 @@ export class ProductsService {
     }
     return this.productsRepository
       .createQueryBuilder('product')
-      .where('product.title ->> :lang1 LIKE :query OR product.title ->> :lang2 LIKE :query OR EXISTS (SELECT 1 FROM jsonb_array_elements(product.packing) AS p WHERE p->>\'article\' ILIKE :query)', {
-        lang1: 'ru',
-        lang2: 'en',
+      .where('product.title ILIKE :query OR EXISTS (SELECT 1 FROM jsonb_array_elements(product.packing) AS p WHERE p->>\'article\' ILIKE :query)', {
         query: `%${searchDto.query}%`,
       })
       .leftJoinAndSelect('product.category', 'category')

@@ -6,59 +6,47 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('jsonb')
-  title: {
-    ru: string;
-    en: string;
-  };
+  @Column()
+  title: string;
 
-  @Column('jsonb', { nullable: true })
-  description: {
-    ru: string;
-    en: string;
-  };
+  @Column({ nullable: true })
+  description_ru: string;
+
+  @Column({ nullable: true })
+  description_en: string;
 
   @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
-  packing: {
-    volume: string;
-    article: string;
-  }[];
+  specifications: string[];
 
-  @Column('jsonb', { nullable: true })
-  advantages: {
-    ru: string[];
-    en: string[];
-  };
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  image: string[];
 
-  @Column('jsonb', { nullable: true })
-  specifications: {
-    ru: string[];
-    en: string[];
-  };
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  sae: string[];
 
-  @Column('jsonb', { nullable: true })
-  characteristics: {
-    ru: string[];
-    en: string[];
-  };
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  density: string[];
 
-  @Column('jsonb', { nullable: true })
-  documentation: string[];
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  kinematic_one: string[];
 
-  @Column({ nullable: true })
-  image: string;
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  kinematic_two: string[];
 
-  @Column({ nullable: true })
-  image_middle: string;
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  viscosity: string[];
 
-  @Column({ nullable: true })
-  image_bottom: string;
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  flash: string[];
 
-  @Column({ nullable: true })
-  line: string;
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  temperature: string[];
 
-  @Column({ nullable: true })
-  viscosity: string;
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  base: string[];
+
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  packing: { volume: string; article: string }[];
 
   @ManyToOne(() => Category, (category) => category.products, { onDelete: 'CASCADE' })
   category: Category;

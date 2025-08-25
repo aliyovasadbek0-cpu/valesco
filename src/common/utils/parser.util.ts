@@ -5,7 +5,6 @@ export function toStringArray(value: any): string[] {
   if (Array.isArray(value)) return value.map(String);
   if (typeof value === 'string') {
     const trimmed = value.trim();
-
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       try {
         const parsed = JSON.parse(trimmed);
@@ -14,11 +13,7 @@ export function toStringArray(value: any): string[] {
         return [];
       }
     }
-
-    return trimmed
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
   }
   return [];
 }
@@ -40,7 +35,5 @@ export function toPackingArray(value: any): PackingDto[] {
 
   if (!Array.isArray(parsed)) return [];
 
-  // ⚡️ Eng muhim qismi:
-  // oddiy obyektlarni PackingDto instansiyasiga aylantiramiz
   return plainToInstance(PackingDto, parsed);
 }
