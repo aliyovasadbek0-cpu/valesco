@@ -26,14 +26,19 @@ export class CategoriesService {
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository.find();
   }
+async findOne(id: number): Promise<Category> {
+  const category = await this.categoriesRepository.findOne({
+    where: { id },
+    relations: ['products'], // shu yerda bog‘langan mahsulotlarni ham qo‘shamiz
+  });
 
-  async findOne(id: number): Promise<Category> {
-    const category = await this.categoriesRepository.findOne({ where: { id } });
-    if (!category) {
-      throw new NotFoundException('Category not found');
-    }
-    return category;
+  if (!category) {
+    throw new NotFoundException('Category not found');
   }
+
+  return category;
+}
+
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto, imgPath?: string): Promise<Category> {
     const category = await this.findOne(id);
