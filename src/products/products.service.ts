@@ -62,7 +62,9 @@ export class ProductsService {
       }
     });
   }
-async findAll(filters: FilterProductsDto): Promise<Product[]> {
+
+
+  async findAll(filters: FilterProductsDto): Promise<Product[]> {
   const query = this.productsRepository
     .createQueryBuilder('product')
     .leftJoinAndSelect('product.category', 'category');
@@ -76,18 +78,18 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
   }
 
   if (filters.line) {
-    conditions.push('product.info::text ILIKE :line');
-    parameters.line = `%${filters.line}%`;
+    conditions.push(':line = ANY(product.info)');
+    parameters.line = filters.line;
   }
 
   if (filters.viscosity) {
-    conditions.push('product.sae::text ILIKE :viscosity');
-    parameters.viscosity = `%${filters.viscosity}%`;
+    conditions.push(':viscosity = ANY(product.sae)');
+    parameters.viscosity = filters.viscosity;
   }
 
   if (filters.approval) {
-    conditions.push('product.specifications::text ILIKE :approval');
-    parameters.approval = `%${filters.approval}%`;
+    conditions.push(':approval = ANY(product.specifications)');
+    parameters.approval = filters.approval;
   }
 
   if (conditions.length > 0) {
@@ -96,6 +98,7 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
 
   return query.getMany();
 }
+
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
@@ -183,15 +186,17 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
   }
 
   async search(searchDto: SearchProductDto): Promise<Product[]> {
-    if (!searchDto.query) {
-      return this.findAll({});
-    }
-    return this.productsRepository
-      .createQueryBuilder('product')
-      .where('product.title ILIKE :query OR EXISTS (SELECT 1 FROM jsonb_array_elements(product.packing) AS p WHERE p->>\'article\' ILIKE :query)', {
-        query: `%${searchDto.query}%`,
-      })
-      .leftJoinAndSelect('product.category', 'category')
-      .getMany();
+  if (!searchDto.query) {
+    return this.findAll({});
   }
+
+  return this.productsRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category')
+    .where('product.title ILIKE :query', {
+      query: `%${searchDto.query}%`,
+    })
+    .getMany();
+}
+
 }
