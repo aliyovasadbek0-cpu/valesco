@@ -5,7 +5,7 @@ import { Product } from './entities/products.entity';
 import { CreateProductDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
-import { SearchProductDto } from './dto/search-product.dto';
+import { SearchProductsDto } from './dto/search-product.dto';
 import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
@@ -195,17 +195,21 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
     await this.productsRepository.remove(product);
   }
 
-  async search(searchDto: SearchProductDto): Promise<Product[]> {
-  if (!searchDto.query) {
-    return this.findAll({});
-  }
-return this.productsRepository
-  .createQueryBuilder('product')
-  .leftJoinAndSelect('product.category', 'category')
-  .where(`to_tsvector('simple', product.title) @@ plainto_tsquery(:query)`, { query: searchDto.query })
-  .getMany();
 
-}
+   async search(searchDto: SearchProductsDto): Promise<Product[]> {
+    console.log('Search term received:', searchDto.title); // Debug uchun
+    const query = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category');
+
+    if (searchDto.title) {
+      query.andWhere('product.title ILIKE :title', { title: `%${searchDto.title}%` });
+    }
+
+    const results = await query.getMany();
+    console.log('Search results:', results); // Debug uchun
+    return results;
+  }
 
 
 }
