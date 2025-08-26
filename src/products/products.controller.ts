@@ -80,8 +80,14 @@ export class ProductsController {
     return this.productsService.remove(+id);
   }
 
-  
-  @Get("search")
+
+}
+
+@Controller('search')
+export class SearchController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Get()
   async search(@Query() searchDto: SearchProductDto) {
     return this.productsService.search(searchDto);
   }

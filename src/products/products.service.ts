@@ -78,9 +78,11 @@ export class ProductsService {
 
   if (filters.line) {
     conditions.push(`
-      EXISTS (
-        SELECT 1 FROM jsonb_array_elements_text(product.info) elem
-        WHERE elem ILIKE :line
+      (
+        EXISTS (
+          SELECT 1 FROM jsonb_array_elements_text(product.info) elem
+          WHERE elem ILIKE :line
+        ) OR product.title ILIKE :line
       )
     `);
     parameters.line = `%${filters.line}%`;
@@ -112,7 +114,6 @@ export class ProductsService {
 
   return query.getMany();
 }
-
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
@@ -198,19 +199,17 @@ export class ProductsService {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);
   }
-
-  async search(searchDto: SearchProductDto): Promise<Product[]> {
-  if (!searchDto.query) {
-    return this.findAll({});
+async search(searchDto: SearchProductDto): Promise<Product[]> {
+    if (!searchDto.query) {
+      return this.findAll({});
+    }
+    return this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.title ILIKE :query', {
+        query: `%${searchDto.query}%`,
+      })
+      .leftJoinAndSelect('product.category', 'category')
+      .getMany();
   }
-
-  return this.productsRepository
-    .createQueryBuilder('product')
-    .leftJoinAndSelect('product.category', 'category')
-    .where('product.title ILIKE :query', {
-      query: `%${searchDto.query}%`,
-    })
-    .getMany();
-}
 
 }
