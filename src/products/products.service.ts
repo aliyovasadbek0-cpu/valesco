@@ -24,28 +24,6 @@ export class ProductsService {
         throw new BadRequestException(`Category with ID ${createProductDto.categoryId} does not exist`);
       }
 
-      // Validate packing
-      if (createProductDto.packing && createProductDto.packing.length > 0) {
-        const articles = createProductDto.packing.map((item) => item.article);
-        const duplicateArticles = articles.filter((item, index) => articles.indexOf(item) !== index);
-        if (duplicateArticles.length > 0) {
-          throw new BadRequestException(`Duplicate articles found in packing: ${duplicateArticles.join(', ')}`);
-        }
-
-        for (const item of createProductDto.packing) {
-          if (!item.volume || !item.article) {
-            throw new BadRequestException('Invalid packing item: volume and article are required');
-          }
-          const existingProduct = await transactionalEntityManager
-            .createQueryBuilder(Product, 'product')
-            .where('product.packing @> :article', { article: [{ article: item.article }] })
-            .getOne();
-          if (existingProduct) {
-            throw new BadRequestException(`Article ${item.article} already exists in another product`);
-          }
-        }
-      }
-
       const product = transactionalEntityManager.create(Product, {
         title: createProductDto.title,
         description_ru: createProductDto.description_ru || '',
