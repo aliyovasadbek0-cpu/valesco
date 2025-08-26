@@ -79,13 +79,9 @@ export class ProductsController {
   async remove(@Param('id') id: string) {
     return this.productsService.remove(+id);
   }
-}
 
-@Controller('search')
-export class SearchController {
-  constructor(private readonly productsService: ProductsService) {}
-
-  @Get()
+  
+  @Get("search")
   async search(@Query() searchDto: SearchProductDto) {
     return this.productsService.search(searchDto);
   }
