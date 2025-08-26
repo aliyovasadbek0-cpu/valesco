@@ -91,7 +91,7 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
   }
 
   if (conditions.length > 0) {
-    query.andWhere(conditions.join(' OR '), parameters);
+    query.andWhere(conditions.join(' AND '), parameters);
   }
 
   return query.getMany();
