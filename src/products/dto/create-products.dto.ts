@@ -1,17 +1,20 @@
-import { IsString, IsOptional, IsArray, IsNumber, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsNumber, ValidateNested, IsNotEmpty } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { toStringArray, toPackingArray } from 'src/common/utils/parser.util';
 
 export class PackingDto {
   @IsString()
+  @IsNotEmpty()
   volume: string;
 
   @IsString()
+  @IsNotEmpty()
   article: string;
 }
 
 export class CreateProductDto {
   @IsString()
+  @IsNotEmpty()
   title: string;
 
   @IsOptional()
@@ -75,7 +78,7 @@ export class CreateProductDto {
   @IsOptional()
   @Transform(({ value }) => toStringArray(value))
   @IsArray()
-  info?: string[]; // ✅ yangi qo‘shildi
+  info?: string[];
 
   @IsOptional()
   @Transform(({ value }) => toPackingArray(value))
@@ -84,7 +87,7 @@ export class CreateProductDto {
   @Type(() => PackingDto)
   packing?: PackingDto[];
 
-  @Type(() => Number)
   @IsNumber()
+  @IsNotEmpty()
   categoryId: number;
 }
