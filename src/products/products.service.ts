@@ -200,17 +200,17 @@ export class ProductsService {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);
   }
-
-  async search(searchDto: SearchProductDto): Promise<Product[]> {
+async search(searchDto: SearchProductDto): Promise<Product[]> {
   if (!searchDto.query) {
     return this.findAll({});
   }
-return this.productsRepository
-  .createQueryBuilder('product')
-  .leftJoinAndSelect('product.category', 'category')
-  .where(`to_tsvector('simple', product.title) @@ plainto_tsquery(:query)`, { query: searchDto.query })
-  .getMany();
 
+  return this.productsRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category')
+    .where('product.title ILIKE :query', { query: `%${searchDto.query}%` })
+    .limit(50) // tezlik uchun, kerakli sonni qo‘ying
+    .getMany();
 }
 
 
