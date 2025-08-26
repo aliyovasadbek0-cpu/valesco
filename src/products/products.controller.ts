@@ -38,10 +38,12 @@ export class ProductsController {
     return this.productsService.create(createProductDto, images);
   }
 
+  
   @Get()
   async findAll(@Query() filters: FilterProductsDto): Promise<Product[]> {
     return this.productsService.findAll(filters);
   }
+
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -88,3 +90,5 @@ export class SearchController {
     return this.productsService.search(searchDto);
   }
 }
+
+
