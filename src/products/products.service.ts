@@ -201,12 +201,12 @@ export class ProductsService {
   if (!searchDto.query) {
     return this.findAll({});
   }
+return this.productsRepository
+  .createQueryBuilder('product')
+  .leftJoinAndSelect('product.category', 'category')
+  .where(`to_tsvector('simple', product.title) @@ plainto_tsquery(:query)`, { query: searchDto.query })
+  .getMany();
 
-  return this.productsRepository
-    .createQueryBuilder('product')
-    .leftJoinAndSelect('product.category', 'category')
-    .where('product.title ILIKE :query', { query: `%${searchDto.query}%` })
-    .getMany();
 }
 
 
