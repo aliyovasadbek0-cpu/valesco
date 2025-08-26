@@ -63,49 +63,52 @@ export class ProductsService {
   }
 
   async findAll(filters: FilterProductsDto): Promise<Product[]> {
-    const query = this.productsRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category');
+  console.log('Filters received:', filters); // Debug uchun
+  const query = this.productsRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category');
 
-    const conditions: string[] = [];
-    const parameters: { [key: string]: any } = {};
+  const conditions: string[] = [];
+  const parameters: { [key: string]: any } = {};
 
-    if (filters.categoryId) {
-      conditions.push('category.id = :categoryId');
-      parameters.categoryId = filters.categoryId;
-    }
-
-    if (filters.line) {
-      conditions.push('product.title ILIKE :line');
-      parameters.line = `%${filters.line}%`;
-    }
-
-    if (filters.viscosity) {
-      conditions.push(`
-        EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
-          WHERE elem ILIKE :viscosity
-        )
-      `);
-      parameters.viscosity = `%${filters.viscosity}%`;
-    }
-
-    if (filters.approval) {
-      conditions.push(`
-        EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
-          WHERE elem ILIKE :approval
-        )
-      `);
-      parameters.approval = `%${filters.approval}%`;
-    }
-
-    if (conditions.length > 0) {
-      query.andWhere(conditions.join(' AND '), parameters);
-    }
-
-    return query.getMany();
+  if (filters.categoryId) {
+    conditions.push('category.id = :categoryId');
+    parameters.categoryId = filters.categoryId;
   }
+
+  if (filters.line) {
+    conditions.push('product.title ILIKE :line');
+    parameters.line = `%${filters.line}%`;
+  }
+
+  if (filters.viscosity) {
+    conditions.push(`
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
+        WHERE elem ILIKE :viscosity
+      )
+    `);
+    parameters.viscosity = `%${filters.viscosity}%`;
+  }
+
+  if (filters.approval) {
+    conditions.push(`
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
+        WHERE elem ILIKE :approval
+      )
+    `);
+    parameters.approval = `%${filters.approval}%`;
+  }
+
+  if (conditions.length > 0) {
+    query.andWhere(conditions.join(' AND '), parameters);
+  }
+
+  const results = await query.getMany();
+  console.log('Query results:', results); // Debug uchun
+  return results;
+}
 
   async findOne(id: number): Promise<Product> {
     if (isNaN(id) || id <= 0) {
