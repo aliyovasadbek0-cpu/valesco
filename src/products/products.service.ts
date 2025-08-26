@@ -88,17 +88,18 @@ export class ProductsService {
         WHERE elem ILIKE :viscosity
       )
     `);
-    parameters.viscosity = `%${filters.viscosity}%`; // Case-insensitive match for viscosity
+    parameters.viscosity = `%${filters.viscosity}%`;
   }
 
   if (filters.approval) {
     conditions.push(`
       EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
-        WHERE elem ILIKE :approval
+        WHERE elem ILIKE :approval OR elem ILIKE :vwApproval
       )
     `);
     parameters.approval = `%${filters.approval}%`;
+    parameters.vwApproval = `%VW%${filters.approval}%`; // "VW" bilan moslikni qo‘shish
   }
 
   if (conditions.length > 0) {
