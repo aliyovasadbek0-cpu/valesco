@@ -73,6 +73,11 @@ export class CreateProductDto {
   base?: string[];
 
   @IsOptional()
+  @Transform(({ value }) => toStringArray(value))
+  @IsArray()
+  info?: string[]; // ✅ yangi qo‘shildi
+
+  @IsOptional()
   @Transform(({ value }) => toPackingArray(value))
   @IsArray()
   @ValidateNested({ each: true })

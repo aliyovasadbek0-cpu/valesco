@@ -46,6 +46,9 @@ export class Product {
   base: string[];
 
   @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  info: string[]; // ✅ yangi qo‘shildi
+
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
   packing: { volume: string; article: string }[];
 
   @ManyToOne(() => Category, (category) => category.products, { onDelete: 'CASCADE' })
