@@ -198,7 +198,6 @@ export class ProductsService {
   }
 
   async search(searchDto: SearchProductDto): Promise<Product[]> {
-  console.log('SearchDto:', searchDto); // 👀
   if (!searchDto.query) {
     return this.findAll({});
   }
@@ -209,5 +208,6 @@ export class ProductsService {
     .where('product.title ILIKE :query', { query: `%${searchDto.query}%` })
     .getMany();
 }
+
 
 }

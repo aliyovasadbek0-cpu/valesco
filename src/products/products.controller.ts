@@ -109,14 +109,12 @@ export class ProductsController {
     }
     return this.productsService.remove(parsedId);
   }
-}
 
-@Controller('search')
-export class SearchController {
-  constructor(private readonly productsService: ProductsService) {}
-
-  @Get()
+   @Get('search')
   async search(@Query() searchDto: SearchProductDto): Promise<Product[]> {
+    if (!searchDto.query) {
+      throw new BadRequestException('Query param is required, e.g. ?query=ZIC');
+    }
     return this.productsService.search(searchDto);
   }
 }
