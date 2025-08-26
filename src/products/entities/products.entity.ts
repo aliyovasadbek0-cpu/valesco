@@ -1,8 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Category } from '../../categories/entities/categories.entity';
 
 @Entity('products')
-@Unique(['title']) // Ensure unique product titles
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;

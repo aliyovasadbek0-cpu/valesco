@@ -17,7 +17,7 @@ export class ProductsController {
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'image', maxCount: 3 }], {
       storage: diskStorage({
-        destination: join(__dirname, '..', '..', 'uploads', 'products'),
+        destination: join(__dirname, '..', '..', 'Uploads', 'products'),
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
@@ -29,6 +29,7 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
+    console.log('Request Body:', createProductDto); // Debug uchun
     const images = {
       image: files.image
         ? files.image.map((file) => `https://valesco-production.up.railway.app/uploads/products/${file.filename}`)

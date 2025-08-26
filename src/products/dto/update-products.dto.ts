@@ -1,4 +1,3 @@
-// update-products.dto.ts
 import { IsString, IsOptional, IsArray, IsNumber, ValidateNested, IsNotEmpty } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { toStringArray, toPackingArray } from 'src/common/utils/parser.util';
