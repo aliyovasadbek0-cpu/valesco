@@ -58,7 +58,17 @@ export class ProductsController {
     return this.productsService.findAll(filters);
   }
 
-  @Get(':id')
+  @Get('search')
+  async search(@Query() searchDto: SearchProductDto): Promise<Product[]> {
+    if (!searchDto.query) {
+      throw new BadRequestException('Query param is required, e.g. ?query=ZIC');
+    }
+    console.log('SearchDto:', searchDto);
+    return this.productsService.search(searchDto);
+  }
+  
+  i
+  @Get(':id(\\d+)')
   async findOne(@Param('id') id: string): Promise<Product> {
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
@@ -108,13 +118,5 @@ export class ProductsController {
       throw new BadRequestException('Invalid product ID: ID must be a positive number');
     }
     return this.productsService.remove(parsedId);
-  }
-
-   @Get('search')
-  async search(@Query() searchDto: SearchProductDto): Promise<Product[]> {
-    if (!searchDto.query) {
-      throw new BadRequestException('Query param is required, e.g. ?query=ZIC');
-    }
-    return this.productsService.search(searchDto);
   }
 }
