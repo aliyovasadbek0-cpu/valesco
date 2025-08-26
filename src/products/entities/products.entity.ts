@@ -1,8 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Category } from '../../categories/entities/categories.entity';
 
 @Entity('products')
-@Unique(['title']) // Ensure unique product titles
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,12 +41,12 @@ export class Product {
 
   @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
   temperature: string[];
+  
+  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
+  info: string[];
 
   @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
   base: string[];
-
-  @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
-  info: string[];
 
   @Column('jsonb', { nullable: true, default: () => "'[]'::jsonb" })
   packing: { volume: string; article: string }[];

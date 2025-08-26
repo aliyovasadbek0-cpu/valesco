@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Put, Delete, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-products.dto';
+import { CreateProductDto } from './dto/create-products.dto'
 import { UpdateProductDto } from './dto/update-products.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
 import { SearchProductDto } from './dto/search-product.dto';
@@ -15,7 +15,9 @@ export class ProductsController {
 
   @Post()
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 3 }], {
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 3 }, // Img1, Img2, Img3 uchun
+    ], {
       storage: diskStorage({
         destination: join(__dirname, '..', '..', 'uploads', 'products'),
         filename: (req, file, callback) => {
@@ -30,9 +32,7 @@ export class ProductsController {
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
     const images = {
-      image: files.image
-        ? files.image.map((file) => `https://valesco-production.up.railway.app/uploads/products/${file.filename}`)
-        : [],
+      image: files.image ? files.image.map(file => `https://valesco-production.up.railway.app/uploads/products/${file.filename}`) : undefined,
     };
     return this.productsService.create(createProductDto, images);
   }
@@ -49,9 +49,11 @@ export class ProductsController {
 
   @Put(':id')
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 3 }], {
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 3 },
+    ], {
       storage: diskStorage({
-        destination: join(__dirname, '..', '..', 'Uploads', 'products'),
+        destination: join(__dirname, '..', '..', 'uploads', 'products'),
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
@@ -65,9 +67,7 @@ export class ProductsController {
     @UploadedFiles() files: { image?: Express.Multer.File[] },
   ) {
     const images = {
-      image: files.image
-        ? files.image.map((file) => `https://valesco-production.up.railway.app/uploads/products/${file.filename}`)
-        : undefined,
+      image: files.image ? files.image.map(file => `/uploads/products/${file.filename}`) : undefined,
     };
     return this.productsService.update(+id, updateProductDto, images);
   }
