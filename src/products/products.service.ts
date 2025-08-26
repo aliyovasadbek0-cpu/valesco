@@ -7,6 +7,7 @@ import { UpdateProductDto } from './dto/update-products.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
 import { SearchProductDto } from './dto/search-product.dto';
 import { CategoriesService } from '../categories/categories.service';
+import { toPackingArray, toStringArray } from 'src/common/utils/parser.util';
 
 @Injectable()
 export class ProductsService {
@@ -17,43 +18,45 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto, images?: { image?: string[] }): Promise<Product> {
-    // Validate unique articles in packing
-    if (createProductDto.packing && createProductDto.packing.length > 0) {
-      for (const item of createProductDto.packing) {
-        if (!item.volume || !item.article) {
-          console.log('Invalid packing item:', item); // Debugging uchun
-          continue; // Noto'g'ri elementlarni o'tkazib yuboramiz
-        }
-        const existingProduct = await this.productsRepository
-          .createQueryBuilder('product')
-          .where('product.packing @> :article', { article: { article: item.article } })
-          .getOne();
-        if (existingProduct) {
-          throw new BadRequestException(`Article ${item.article} already exists`);
-        }
+  // Packing article unique check
+  if (createProductDto.packing && createProductDto.packing.length > 0) {
+    for (const item of createProductDto.packing) {
+      if (!item.volume || !item.article) continue;
+
+      const existingProduct = await this.productsRepository
+        .createQueryBuilder('product')
+        .where('product.packing @> :article', { article: [{ article: item.article }] })
+        .getOne();
+
+      if (existingProduct) {
+        throw new BadRequestException(`Article ${item.article} already exists`);
       }
     }
-
-    const category = await this.categoriesService.findOne(createProductDto.categoryId);
-    const product = this.productsRepository.create({
-      title: createProductDto.title,
-      description_ru: createProductDto.description_ru,
-      description_en: createProductDto.description_en,
-      specifications: createProductDto.specifications || [],
-      image: images?.image || [],
-      sae: createProductDto.sae || [],
-      density: createProductDto.density || [],
-      kinematic_one: createProductDto.kinematic_one || [],
-      kinematic_two: createProductDto.kinematic_two || [],
-      viscosity: createProductDto.viscosity || [],
-      flash: createProductDto.flash || [],
-      temperature: createProductDto.temperature || [],
-      base: createProductDto.base || [],
-      packing: createProductDto.packing || [],
-      category,
-    });
-    return this.productsRepository.save(product);
   }
+
+  const category = await this.categoriesService.findOne(createProductDto.categoryId);
+
+  const product = this.productsRepository.create({
+    title: createProductDto.title,
+    description_ru: createProductDto.description_ru?.trim() || '',
+    description_en: createProductDto.description_en?.trim() || '',
+    specifications: toStringArray(createProductDto.specifications),
+    image: images?.image || [],
+    sae: toStringArray(createProductDto.sae),
+    density: toStringArray(createProductDto.density),
+    kinematic_one: toStringArray(createProductDto.kinematic_one),
+    kinematic_two: toStringArray(createProductDto.kinematic_two),
+    viscosity: toStringArray(createProductDto.viscosity),
+    flash: toStringArray(createProductDto.flash),
+    temperature: toStringArray(createProductDto.temperature),
+    base: toStringArray(createProductDto.base),
+    info: toStringArray(createProductDto.info), 
+    packing: toPackingArray(createProductDto.packing),
+    category,
+  });
+
+  return this.productsRepository.save(product);
+}
 
   async findAll(filters: FilterProductsDto): Promise<Product[]> {
     const query = this.productsRepository
