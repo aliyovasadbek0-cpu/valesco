@@ -45,7 +45,6 @@ export class ProductsService {
 
       try {
         const savedProduct = await transactionalEntityManager.save(Product, product);
-        // Faqat yaratilgan mahsulotni qaytarish
         const result = await transactionalEntityManager.findOne(Product, {
           where: { id: savedProduct.id },
           relations: ['category'],
@@ -64,58 +63,54 @@ export class ProductsService {
   }
 
   async findAll(filters: FilterProductsDto): Promise<Product[]> {
-  const query = this.productsRepository
-    .createQueryBuilder('product')
-    .leftJoinAndSelect('product.category', 'category');
+    const query = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category');
 
-  const conditions: string[] = [];
-  const parameters: { [key: string]: any } = {};
+    const conditions: string[] = [];
+    const parameters: { [key: string]: any } = {};
 
-  if (filters.categoryId) {
-    conditions.push('category.id = :categoryId');
-    parameters.categoryId = filters.categoryId;
-  }
+    if (filters.categoryId) {
+      conditions.push('category.id = :categoryId');
+      parameters.categoryId = filters.categoryId;
+    }
 
-  if (filters.line) {
-    conditions.push(`
-      (
+    if (filters.line) {
+      conditions.push('product.title ILIKE :line');
+      parameters.line = `%${filters.line}%`;
+    }
+
+    if (filters.viscosity) {
+      conditions.push(`
         EXISTS (
-          SELECT 1 FROM jsonb_array_elements_text(product.info) elem
-          WHERE elem ILIKE :line
-        ) OR product.title ILIKE :line
-      )
-    `);
-    parameters.line = `%${filters.line}%`;
-  }
+          SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
+          WHERE elem ILIKE :viscosity
+        )
+      `);
+      parameters.viscosity = `%${filters.viscosity}%`;
+    }
 
-  if (filters.viscosity) {
-    conditions.push(`
-      EXISTS (
-        SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
-        WHERE elem ILIKE :viscosity
-      )
-    `);
-    parameters.viscosity = `%${filters.viscosity}%`;
-  }
+    if (filters.approval) {
+      conditions.push(`
+        EXISTS (
+          SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
+          WHERE elem ILIKE :approval
+        )
+      `);
+      parameters.approval = `%${filters.approval}%`;
+    }
 
-  if (filters.approval) {
-    conditions.push(`
-      EXISTS (
-        SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
-        WHERE elem ILIKE :approval
-      )
-    `);
-    parameters.approval = `%${filters.approval}%`;
-  }
+    if (conditions.length > 0) {
+      query.andWhere(conditions.join(' AND '), parameters);
+    }
 
-  if (conditions.length > 0) {
-    query.andWhere(conditions.join(' AND '), parameters);
+    return query.getMany();
   }
-
-  return query.getMany();
-}
 
   async findOne(id: number): Promise<Product> {
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestException('Invalid product ID: ID must be a positive number');
+    }
     const product = await this.productsRepository.findOne({
       where: { id },
       relations: ['category'],
@@ -177,7 +172,6 @@ export class ProductsService {
 
       try {
         const savedProduct = await transactionalEntityManager.save(Product, product);
-        // Faqat yangilangan mahsulotni qaytarish
         const result = await transactionalEntityManager.findOne(Product, {
           where: { id: savedProduct.id },
           relations: ['category'],
@@ -199,7 +193,8 @@ export class ProductsService {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);
   }
-async search(searchDto: SearchProductDto): Promise<Product[]> {
+
+  async search(searchDto: SearchProductDto): Promise<Product[]> {
     if (!searchDto.query) {
       return this.findAll({});
     }
@@ -211,5 +206,4 @@ async search(searchDto: SearchProductDto): Promise<Product[]> {
       .leftJoinAndSelect('product.category', 'category')
       .getMany();
   }
-
 }
