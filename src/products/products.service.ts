@@ -63,7 +63,7 @@ export class ProductsService {
     });
   }
 
-async findAll(filters: FilterProductsDto): Promise<Product[]> {
+  async findAll(filters: FilterProductsDto): Promise<Product[]> {
   const query = this.productsRepository
     .createQueryBuilder('product')
     .leftJoinAndSelect('product.category', 'category');
@@ -77,17 +77,32 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
   }
 
   if (filters.line) {
-    conditions.push('product.info::text ILIKE :line');
+    conditions.push(`
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(product.info) elem
+        WHERE elem ILIKE :line
+      )
+    `);
     parameters.line = `%${filters.line}%`;
   }
 
   if (filters.viscosity) {
-    conditions.push('product.sae::text ILIKE :viscosity');
+    conditions.push(`
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
+        WHERE elem ILIKE :viscosity
+      )
+    `);
     parameters.viscosity = `%${filters.viscosity}%`;
   }
 
   if (filters.approval) {
-    conditions.push('product.specifications::text ILIKE :approval');
+    conditions.push(`
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(product.specifications) elem
+        WHERE elem ILIKE :approval
+      )
+    `);
     parameters.approval = `%${filters.approval}%`;
   }
 
@@ -97,6 +112,7 @@ async findAll(filters: FilterProductsDto): Promise<Product[]> {
 
   return query.getMany();
 }
+
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
