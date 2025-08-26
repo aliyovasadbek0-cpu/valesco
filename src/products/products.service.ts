@@ -7,6 +7,7 @@ import { UpdateProductDto } from './dto/update-products.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
 import { SearchProductDto } from './dto/search-product.dto';
 import { CategoriesService } from '../categories/categories.service';
+import { QueryFailedError } from 'typeorm';
 
 @Injectable()
 export class ProductsService {
@@ -15,30 +16,47 @@ export class ProductsService {
     private productsRepository: Repository<Product>,
     private categoriesService: CategoriesService,
   ) {}
-
   async create(createProductDto: CreateProductDto, images?: { image?: string[] }): Promise<Product> {
+  return await this.productsRepository.manager.transaction(async (transactionalEntityManager) => {
+    // Validate unique title
+    const existingProductByTitle = await transactionalEntityManager.findOne(Product, {
+      where: { title: createProductDto.title },
+    });
+    if (existingProductByTitle) {
+      throw new BadRequestException(`Product with title "${createProductDto.title}" already exists`);
+    }
+
     // Validate unique articles in packing
     if (createProductDto.packing && createProductDto.packing.length > 0) {
+      const articles = createProductDto.packing.map((item) => item.article);
+      const duplicateArticles = articles.filter((item, index) => articles.indexOf(item) !== index);
+      if (duplicateArticles.length > 0) {
+        throw new BadRequestException(`Duplicate articles found in packing: ${duplicateArticles.join(', ')}`);
+      }
+
       for (const item of createProductDto.packing) {
         if (!item.volume || !item.article) {
-          console.log('Invalid packing item:', item); // Debugging uchun
-          continue; // Noto'g'ri elementlarni o'tkazib yuboramiz
+          throw new BadRequestException('Invalid packing item: volume and article are required');
         }
-        const existingProduct = await this.productsRepository
-          .createQueryBuilder('product')
-          .where('product.packing @> :article', { article: { article: item.article } })
+        const existingProduct = await transactionalEntityManager
+          .createQueryBuilder(Product, 'product')
+          .where('product.packing @> :article', { article: [{ article: item.article }] })
           .getOne();
         if (existingProduct) {
-          throw new BadRequestException(`Article ${item.article} already exists`);
+          throw new BadRequestException(`Article ${item.article} already exists in another product`);
         }
       }
     }
 
     const category = await this.categoriesService.findOne(createProductDto.categoryId);
-    const product = this.productsRepository.create({
+    if (!category) {
+      throw new BadRequestException(`Category with ID ${createProductDto.categoryId} does not exist`);
+    }
+
+    const product = transactionalEntityManager.create(Product, {
       title: createProductDto.title,
-      description_ru: createProductDto.description_ru,
-      description_en: createProductDto.description_en,
+      description_ru: createProductDto.description_ru || '',
+      description_en: createProductDto.description_en || '',
       specifications: createProductDto.specifications || [],
       image: images?.image || [],
       sae: createProductDto.sae || [],
@@ -53,9 +71,17 @@ export class ProductsService {
       info: createProductDto.info || [],
       category,
     });
-    return this.productsRepository.save(product);
-  }
 
+    try {
+      return await transactionalEntityManager.save(Product, product);
+    } catch (error) {
+      if (error instanceof QueryFailedError && error.message.includes('duplicate key')) {
+        throw new BadRequestException(`Product with title "${createProductDto.title}" already exists`);
+      }
+      throw error;
+    }
+  });
+}
   async findAll(filters: FilterProductsDto): Promise<Product[]> {
     const query = this.productsRepository
       .createQueryBuilder('product')
@@ -78,52 +104,80 @@ export class ProductsService {
       relations: ['category'],
     });
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
     return product;
   }
 
   async update(id: number, updateProductDto: UpdateProductDto, images?: { image?: string[] }): Promise<Product> {
-    const product = await this.findOne(id);
+    return await this.productsRepository.manager.transaction(async (transactionalEntityManager) => {
+      const product = await this.findOne(id);
 
-    if (updateProductDto.title) product.title = updateProductDto.title;
-    if (updateProductDto.description_ru) product.description_ru = updateProductDto.description_ru;
-    if (updateProductDto.description_en) product.description_en = updateProductDto.description_en;
-    if (updateProductDto.specifications) product.specifications = updateProductDto.specifications;
-    if (images?.image) product.image = images.image;
-    if (updateProductDto.sae) product.sae = updateProductDto.sae;
-    if (updateProductDto.density) product.density = updateProductDto.density;
-    if (updateProductDto.kinematic_one) product.kinematic_one = updateProductDto.kinematic_one;
-    if (updateProductDto.kinematic_two) product.kinematic_two = updateProductDto.kinematic_two;
-    if (updateProductDto.viscosity) product.viscosity = updateProductDto.viscosity;
-    if (updateProductDto.flash) product.flash = updateProductDto.flash;
-    if (updateProductDto.temperature) product.temperature = updateProductDto.temperature;
-    if (updateProductDto.base) product.base = updateProductDto.base;
-
-    if (updateProductDto.packing) {
-      for (const item of updateProductDto.packing) {
-        if (!item.volume || !item.article) {
-          console.log('Invalid packing item in update:', item); // Debugging uchun
-          continue; // Noto'g'ri elementlarni o'tkazib yuboramiz
+      // Validate unique title if updated
+      if (updateProductDto.title && updateProductDto.title !== product.title) {
+        const existingProductByTitle = await transactionalEntityManager.findOne(Product, {
+          where: { title: updateProductDto.title },
+        });
+        if (existingProductByTitle) {
+          throw new BadRequestException(`Product with title "${updateProductDto.title}" already exists`);
         }
-        const existingProduct = await this.productsRepository
-          .createQueryBuilder('product')
-          .where('product.packing @> :article AND product.id != :id', { article: { article: item.article }, id })
-          .getOne();
-        if (existingProduct) {
-          throw new BadRequestException(`Article ${item.article} already exists`);
-        }
+        product.title = updateProductDto.title;
       }
-      product.packing = updateProductDto.packing || [];
-    }
 
-    if (updateProductDto.categoryId) {
-      const category = await this.categoriesService.findOne(updateProductDto.categoryId);
-      product.category = category;
-    }
+      // Validate unique articles in packing
+      if (updateProductDto.packing && updateProductDto.packing.length > 0) {
+        const articles = updateProductDto.packing.map((item) => item.article);
+        const duplicateArticles = articles.filter((item, index) => articles.indexOf(item) !== index);
+        if (duplicateArticles.length > 0) {
+          throw new BadRequestException(`Duplicate articles found in packing: ${duplicateArticles.join(', ')}`);
+        }
 
-    console.log('Product to update:', product); // Debugging uchun
-    return this.productsRepository.save(product);
+        for (const item of updateProductDto.packing) {
+          if (!item.volume || !item.article) {
+            throw new BadRequestException('Invalid packing item: volume and article are required');
+          }
+          const existingProduct = await transactionalEntityManager
+            .createQueryBuilder(Product, 'product')
+            .where('product.packing @> :article AND product.id != :id', { article: [{ article: item.article }], id })
+            .getOne();
+          if (existingProduct) {
+            throw new BadRequestException(`Article ${item.article} already exists in another product`);
+          }
+        }
+        product.packing = updateProductDto.packing;
+      }
+
+      if (updateProductDto.description_ru !== undefined) product.description_ru = updateProductDto.description_ru || '';
+      if (updateProductDto.description_en !== undefined) product.description_en = updateProductDto.description_en || '';
+      if (updateProductDto.specifications) product.specifications = updateProductDto.specifications;
+      if (images?.image) product.image = images.image;
+      if (updateProductDto.sae) product.sae = updateProductDto.sae;
+      if (updateProductDto.density) product.density = updateProductDto.density;
+      if (updateProductDto.kinematic_one) product.kinematic_one = updateProductDto.kinematic_one;
+      if (updateProductDto.kinematic_two) product.kinematic_two = updateProductDto.kinematic_two;
+      if (updateProductDto.viscosity) product.viscosity = updateProductDto.viscosity;
+      if (updateProductDto.flash) product.flash = updateProductDto.flash;
+      if (updateProductDto.temperature) product.temperature = updateProductDto.temperature;
+      if (updateProductDto.base) product.base = updateProductDto.base;
+      if (updateProductDto.info) product.info = updateProductDto.info;
+
+      if (updateProductDto.categoryId) {
+        const category = await this.categoriesService.findOne(updateProductDto.categoryId);
+        if (!category) {
+          throw new NotFoundException(`Category with ID ${updateProductDto.categoryId} not found`);
+        }
+        product.category = category;
+      }
+
+      try {
+        return await transactionalEntityManager.save(Product, product);
+      } catch (error) {
+        if (error instanceof QueryFailedError && error.message.includes('duplicate key')) {
+          throw new BadRequestException(`Product with title "${product.title}" already exists`);
+        }
+        throw error;
+      }
+    });
   }
 
   async remove(id: number): Promise<void> {

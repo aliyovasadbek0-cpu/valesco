@@ -1,18 +1,22 @@
-import { IsString, IsOptional, IsArray, IsNumber, ValidateNested } from 'class-validator';
+// update-products.dto.ts
+import { IsString, IsOptional, IsArray, IsNumber, ValidateNested, IsNotEmpty } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { toStringArray, toPackingArray } from 'src/common/utils/parser.util';
 
 export class PackingDto {
   @IsString()
+  @IsNotEmpty()
   volume: string;
 
   @IsString()
+  @IsNotEmpty()
   article: string;
 }
 
 export class UpdateProductDto {
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   title?: string;
 
   @IsOptional()
@@ -86,7 +90,7 @@ export class UpdateProductDto {
   packing?: PackingDto[];
 
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (typeof value === 'string' ? parseInt(value, 10) : value))
   @IsNumber()
   categoryId?: number;
 }
