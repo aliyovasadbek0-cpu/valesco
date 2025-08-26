@@ -10,6 +10,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-products.dto';
@@ -63,18 +64,15 @@ export class ProductsController {
     if (!searchDto.query) {
       throw new BadRequestException('Query param is required, e.g. ?query=ZIC');
     }
-    console.log('SearchDto:', searchDto);
     return this.productsService.search(searchDto);
   }
-  
-  i
-  @Get(':id(\\d+)')
-  async findOne(@Param('id') id: string): Promise<Product> {
-    const parsedId = parseInt(id, 10);
-    if (isNaN(parsedId) || parsedId <= 0) {
+
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
+    if (id <= 0) {
       throw new BadRequestException('Invalid product ID: ID must be a positive number');
     }
-    return this.productsService.findOne(parsedId);
+    return this.productsService.findOne(id);
   }
 
   @Put(':id')
