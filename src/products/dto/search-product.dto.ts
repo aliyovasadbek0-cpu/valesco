@@ -1,7 +1,7 @@
 import { IsOptional, IsString } from 'class-validator';
 
-export class SearchProductsDto {
+export class SearchProductDto {
   @IsOptional()
   @IsString()
-  title?: string;
+  query?: string;
 }

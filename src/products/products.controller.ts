@@ -16,7 +16,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
-import { SearchProductsDto } from './dto/search-product.dto';
+import { SearchProductDto } from './dto/search-product.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -60,10 +60,12 @@ export class ProductsController {
   }
 
   @Get('search')
-  async search(@Query() searchDto: SearchProductsDto): Promise<Product[]> {
+  async search(@Query() searchDto: SearchProductDto): Promise<Product[]> {
+    if (!searchDto.query) {
+      throw new BadRequestException('Query param is required, e.g. ?query=ZIC');
+    }
     return this.productsService.search(searchDto);
   }
-
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
