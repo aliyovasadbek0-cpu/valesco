@@ -61,8 +61,7 @@ export class ProductsService {
       }
     });
   }
-
-  async findAll(filters: FilterProductsDto): Promise<Product[]> {
+async findAll(filters: FilterProductsDto): Promise<Product[]> {
   console.log('Filters received:', filters); // Debug uchun
   const query = this.productsRepository
     .createQueryBuilder('product')
@@ -85,10 +84,10 @@ export class ProductsService {
     conditions.push(`
       EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(product.sae) elem
-        WHERE elem ILIKE :viscosity
+        WHERE elem = :viscosity
       )
     `);
-    parameters.viscosity = `%${filters.viscosity}%`;
+    parameters.viscosity = filters.viscosity;
   }
 
   if (filters.approval) {
@@ -109,7 +108,6 @@ export class ProductsService {
   console.log('Query results:', results); // Debug uchun
   return results;
 }
-
   async findOne(id: number): Promise<Product> {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('Invalid product ID: ID must be a positive number');
