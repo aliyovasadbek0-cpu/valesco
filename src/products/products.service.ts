@@ -62,22 +62,40 @@ export class ProductsService {
       }
     });
   }
+async findAll(filters: FilterProductsDto): Promise<Product[]> {
+  const query = this.productsRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category');
 
-  async findAll(filters: FilterProductsDto): Promise<Product[]> {
-    const query = this.productsRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category');
+  const conditions: string[] = [];
+  const parameters: { [key: string]: any } = {};
 
-    if (filters.categoryId) {
-      query.andWhere('category.id = :categoryId', { categoryId: filters.categoryId });
-    }
-
-    if (filters.approval) {
-      query.andWhere('product.specifications::text ILIKE :approval', { approval: `%${filters.approval}%` });
-    }
-
-    return query.getMany();
+  if (filters.categoryId) {
+    conditions.push('category.id = :categoryId');
+    parameters.categoryId = filters.categoryId;
   }
+
+  if (filters.line) {
+    conditions.push('product.info::text ILIKE :line');
+    parameters.line = `%${filters.line}%`;
+  }
+
+  if (filters.viscosity) {
+    conditions.push('product.sae::text ILIKE :viscosity');
+    parameters.viscosity = `%${filters.viscosity}%`;
+  }
+
+  if (filters.approval) {
+    conditions.push('product.specifications::text ILIKE :approval');
+    parameters.approval = `%${filters.approval}%`;
+  }
+
+  if (conditions.length > 0) {
+    query.andWhere(conditions.join(' OR '), parameters);
+  }
+
+  return query.getMany();
+}
 
   async findOne(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
