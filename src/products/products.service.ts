@@ -198,15 +198,16 @@ export class ProductsService {
   }
 
   async search(searchDto: SearchProductDto): Promise<Product[]> {
-    if (!searchDto.query) {
-      return this.findAll({});
-    }
-    return this.productsRepository
-      .createQueryBuilder('product')
-      .where('product.title ILIKE :query', {
-        query: `%${searchDto.query}%`,
-      })
-      .leftJoinAndSelect('product.category', 'category')
-      .getMany();
+  console.log('SearchDto:', searchDto); // 👀
+  if (!searchDto.query) {
+    return this.findAll({});
   }
+
+  return this.productsRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category')
+    .where('product.title ILIKE :query', { query: `%${searchDto.query}%` })
+    .getMany();
+}
+
 }
