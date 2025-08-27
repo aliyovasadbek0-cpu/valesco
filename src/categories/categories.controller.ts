@@ -1,14 +1,28 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-categories.dto';
 import { UpdateCategoryDto } from './dto/update-categories.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -16,18 +30,22 @@ export class CategoriesController {
       storage: diskStorage({
         destination: join(__dirname, '..', '..', 'uploads', 'categories'),
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
-      
     }),
   )
   async create(
     @Body() createCategoryDto: CreateCategoryDto,
     @UploadedFile() img: Express.Multer.File,
   ) {
-    const imgPath = img ? `https://valesco-production.up.railway.app/uploads/categories/${img.filename}` : undefined;
+    const baseUrl = this.configService.get<string>('BASE_URL');
+    const imgPath = img
+      ? `${baseUrl}/uploads/categories/${img.filename}`
+      : undefined;
+
     return this.categoriesService.create(createCategoryDto, imgPath);
   }
 
@@ -47,7 +65,8 @@ export class CategoriesController {
       storage: diskStorage({
         destination: join(__dirname, '..', '..', 'uploads', 'categories'),
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
@@ -58,7 +77,11 @@ export class CategoriesController {
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() img: Express.Multer.File,
   ) {
-    const imgPath = img ? `/uploads/categories/${img.filename}` : undefined;
+    const baseUrl = this.configService.get<string>('BASE_URL');
+    const imgPath = img
+      ? `${baseUrl}/uploads/categories/${img.filename}`
+      : undefined;
+
     return this.categoriesService.update(+id, updateCategoryDto, imgPath);
   }
 

@@ -33,7 +33,6 @@ export function toPackingArray(value: any): PackingDto[] {
 
   if (typeof value === 'string') {
     try {
-      // Ikkita JSON.stringify qilingan holatni boshqarish
       let tempValue = value;
       while (typeof tempValue === 'string' && tempValue.startsWith('"{') && tempValue.endsWith('}"')) {
         tempValue = JSON.parse(tempValue);

@@ -99,18 +99,18 @@ export class ProductsService {
       )
     `);
     parameters.approval = `%${filters.approval}%`;
-    parameters.vwApproval = `%VW%${filters.approval}%`; // "VW" bilan moslikni qo‘shish
+    parameters.vwApproval = `%VW%${filters.approval}%`;
   }
 
   if (conditions.length > 0) {
     query.andWhere(conditions.join(' AND '), parameters);
   }
 
-  const sql = query.getSql(); // Log the raw SQL query
+  const sql = query.getSql();
   console.log('Generated SQL:', sql);
-  console.log('Query parameters:', parameters); // Log the parameters
+  console.log('Query parameters:', parameters);
   const results = await query.getMany();
-  console.log('Query results:', results); // Debug uchun
+  console.log('Query results:', results); 
   return results;
 }
 
@@ -200,6 +200,8 @@ export class ProductsService {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);
   }
+
+  
 async search(searchDto: SearchProductDto): Promise<Product[]> {
   if (!searchDto.query) {
     return this.findAll({});
@@ -209,9 +211,7 @@ async search(searchDto: SearchProductDto): Promise<Product[]> {
     .createQueryBuilder('product')
     .leftJoinAndSelect('product.category', 'category')
     .where('product.title ILIKE :query', { query: `%${searchDto.query}%` })
-    .limit(50) // tezlik uchun, kerakli sonni qo‘ying
+    .limit(50) 
     .getMany();
 }
-
-
 }

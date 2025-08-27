@@ -1,27 +1,34 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'caboose.proxy.rlwy.net',
-      port: 38357,
-      username: 'postgres',
-      password: 'HyVvMQNgyRdwgFzDnhjcwaDwluHuGxLX',
-      database: 'railway',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: parseInt(config.get<string>('DB_PORT', '5432')),
+        username: config.get<string>('DB_USERNAME'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
         autoLoadEntities: true,
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        ssl: config.get<string>('DB_SSL') === 'true'
+          ? { rejectUnauthorized: false }
+          : false,
+      }),
     }),
     ProductsModule,
     CategoriesModule,
   ],
-
 })
 export class AppModule {}
