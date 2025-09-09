@@ -26,8 +26,9 @@ export class CategoriesService {
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository
       .createQueryBuilder('category')
-      .orderBy('category.updateOrder', 'DESC') // Most recently updated first
-      .addOrderBy('category.id', 'ASC') // Fallback for same updateOrder
+      .orderBy('(CASE WHEN category.updateOrder > 0 THEN 0 ELSE 1 END)', 'ASC')
+      .addOrderBy('category.updateOrder', 'ASC')
+      .addOrderBy('category.id', 'ASC')
       .getMany();
   }
 
@@ -70,6 +71,7 @@ async update(id: number, updateCategoryDto: UpdateCategoryDto, imgPath?: string)
       return transactionalEntityManager.save(category);
     });
   }
+  
 
   async remove(id: number): Promise<void> {
     const category = await this.findOne(id);

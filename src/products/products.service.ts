@@ -107,10 +107,12 @@ export class ProductsService {
     }
 
     return await query
-      .orderBy('product.updateOrder', 'DESC') // Most recently updated first
-      .addOrderBy('product.id', 'ASC') // Fallback for same updateOrder
+      .orderBy('(CASE WHEN product.updateOrder > 0 THEN 0 ELSE 1 END)', 'ASC')
+      .addOrderBy('product.updateOrder', 'ASC')
+      .addOrderBy('product.id', 'ASC')
       .getMany();
   }
+
 
   async findOne(id: number): Promise<Product> {
     if (isNaN(id) || id <= 0) {
