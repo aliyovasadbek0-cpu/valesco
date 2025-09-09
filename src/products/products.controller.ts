@@ -35,7 +35,7 @@ export class ProductsController {
   
   @Post()
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 3 }], {
+    FileFieldsInterceptor([{ name: 'image', maxCount: 50 }], {
       storage: diskStorage({
         destination: join(__dirname, '..', '..', 'uploads', 'products'),
         filename: (req, file, cb) => {
@@ -91,7 +91,7 @@ export class ProductsController {
   
   @Put(':id')
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'image', maxCount: 3 }], {
+    FileFieldsInterceptor([{ name: 'image', maxCount: 50 }], {
       storage: diskStorage({
         destination: join(__dirname, '..', '..', 'uploads', 'products'),
         filename: (req, file, cb) => {
