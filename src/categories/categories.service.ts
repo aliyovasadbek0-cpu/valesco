@@ -23,11 +23,11 @@ export class CategoriesService {
     return this.categoriesRepository.save(category);
   }
 
-   async findAll(): Promise<Category[]> {
+  async findAll(): Promise<Category[]> {
     return this.categoriesRepository
       .createQueryBuilder('category')
-      .orderBy('category.updateOrder', 'ASC') // Yangilanish tartibi bo‘yicha
-      .addOrderBy('category.id', 'ASC') // Fallback sifatida
+      .orderBy('category.updateOrder', 'DESC') // Most recently updated first
+      .addOrderBy('category.id', 'ASC') // Fallback for same updateOrder
       .getMany();
   }
 
