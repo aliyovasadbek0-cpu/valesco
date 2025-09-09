@@ -112,7 +112,6 @@ export class ProductsService {
       .getMany();
   }
 
-
   async findOne(id: number): Promise<Product> {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('Invalid product ID: ID must be a positive number');
@@ -201,7 +200,7 @@ export class ProductsService {
       }
     });
   }
-  
+
   async remove(id: number): Promise<void> {
     const product = await this.findOne(id);
     await this.productsRepository.remove(product);

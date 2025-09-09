@@ -45,7 +45,6 @@ async findOne(id: number): Promise<Category> {
   return category;
 }
 
-
 async update(id: number, updateCategoryDto: UpdateCategoryDto, imgPath?: string): Promise<Category> {
     return await this.categoriesRepository.manager.transaction(async (transactionalEntityManager) => {
       const category = await this.findOne(id);
@@ -70,7 +69,7 @@ async update(id: number, updateCategoryDto: UpdateCategoryDto, imgPath?: string)
       return transactionalEntityManager.save(category);
     });
   }
-
+  
   async remove(id: number): Promise<void> {
     const category = await this.findOne(id);
     await this.categoriesRepository.remove(category);
